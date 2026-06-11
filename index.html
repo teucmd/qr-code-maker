@@ -59,7 +59,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
         }
 
         .form-group {
@@ -202,7 +202,7 @@
 
         .qr-preview {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             background: #f9f9f9;
             border-radius: 12px;
             min-height: 350px;
@@ -211,6 +211,7 @@
             align-items: center;
             justify-content: center;
             border: 2px dashed #ddd;
+            width: 100%;
         }
 
         .qr-preview.active {
@@ -222,18 +223,33 @@
             margin-bottom: 20px;
             color: #555;
             font-size: 16px;
-        }
-
-        #qrCanvas {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 20px;
             display: none;
         }
 
-        #qrCanvas.show {
+        .qr-preview h3.hidden-when-active {
+            display: block;
+        }
+
+        .qr-preview.active h3.hidden-when-active {
+            display: none;
+        }
+
+        .qr-canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .qr-canvas-wrapper canvas {
+            max-width: 100%;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .qr-canvas-wrapper canvas.show {
             display: block;
         }
 
@@ -242,11 +258,20 @@
             gap: 10px;
             width: 100%;
             justify-content: center;
+            display: none;
+        }
+
+        .controls.show {
+            display: flex;
         }
 
         .placeholder-text {
             color: #999;
             font-size: 14px;
+        }
+
+        .placeholder-text.hidden {
+            display: none;
         }
     </style>
 </head>
@@ -285,11 +310,11 @@
 
             <div class="preview-section">
                 <div class="qr-preview" id="qrPreview">
-                    <h3>QR Code Preview</h3>
-                    <div id="qrContainer"></div>
-                    <p class="placeholder-text">Your QR code will appear here</p>
+                    <h3 class="hidden-when-active">QR Code Preview</h3>
+                    <div class="qr-canvas-wrapper" id="qrCanvasWrapper"></div>
+                    <p class="placeholder-text" id="placeholderText">Your QR code will appear here</p>
                 </div>
-                <div class="controls" id="controls" style="margin-top: 20px; display: none;">
+                <div class="controls" id="controls">
                     <button class="btn-download" id="downloadBtn" onclick="downloadQR()">⬇️ Download</button>
                     <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy</button>
                 </div>
@@ -303,10 +328,12 @@
         const inputData = document.getElementById('inputData');
         const inputType = document.getElementById('inputType');
         const qrPreview = document.getElementById('qrPreview');
-        const qrContainer = document.getElementById('qrContainer');
+        const qrCanvasWrapper = document.getElementById('qrCanvasWrapper');
         const successMessage = document.getElementById('successMessage');
         const controls = document.getElementById('controls');
+        const placeholderText = document.getElementById('placeholderText');
         let qrCode = null;
+        let lastCanvas = null;
 
         // Update placeholder based on input type
         inputType.addEventListener('change', function() {
@@ -327,16 +354,17 @@
             }
 
             // Clear previous QR code
-            qrContainer.innerHTML = '';
+            qrCanvasWrapper.innerHTML = '';
 
             const size = parseInt(document.getElementById('qrSize').value) || 300;
 
-            // Create canvas element
-            const canvas = document.createElement('canvas');
-            qrContainer.appendChild(canvas);
+            // Create a temporary div for QRCode library
+            const tempDiv = document.createElement('div');
+            tempDiv.style.display = 'none';
+            document.body.appendChild(tempDiv);
 
-            // Generate QR code
-            qrCode = new QRCode(canvas, {
+            // Generate QR code in temporary div
+            qrCode = new QRCode(tempDiv, {
                 text: data,
                 width: size,
                 height: size,
@@ -345,20 +373,26 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Show preview and controls
-            qrPreview.classList.add('active');
-            controls.style.display = 'flex';
-            successMessage.classList.remove('show');
-
-            // Scroll to preview
+            // Move the generated canvas to our preview area
             setTimeout(() => {
-                qrPreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                const generatedCanvas = tempDiv.querySelector('canvas');
+                if (generatedCanvas) {
+                    lastCanvas = generatedCanvas.cloneNode(true);
+                    lastCanvas.classList.add('show');
+                    qrCanvasWrapper.appendChild(lastCanvas);
+                    
+                    // Show preview and controls
+                    qrPreview.classList.add('active');
+                    controls.classList.add('show');
+                    placeholderText.classList.add('hidden');
+                    successMessage.classList.remove('show');
+                }
+                document.body.removeChild(tempDiv);
             }, 100);
         }
 
         function downloadQR() {
-            const canvas = qrContainer.querySelector('canvas');
-            if (!canvas) {
+            if (!lastCanvas) {
                 alert('Please generate a QR code first!');
                 return;
             }
@@ -371,19 +405,18 @@
             const filename = `${day}/${month}/${year}`;
 
             const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
+            link.href = lastCanvas.toDataURL('image/png');
             link.download = filename + '.png';
             link.click();
         }
 
         function copyToClipboard() {
-            const canvas = qrContainer.querySelector('canvas');
-            if (!canvas) {
+            if (!lastCanvas) {
                 alert('Please generate a QR code first!');
                 return;
             }
 
-            canvas.toBlob(function(blob) {
+            lastCanvas.toBlob(function(blob) {
                 const item = new ClipboardItem({ 'image/png': blob });
                 navigator.clipboard.write([item]).then(() => {
                     successMessage.classList.add('show');
