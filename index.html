@@ -88,11 +88,6 @@
             min-height: 100px;
         }
 
-        input[type="file"] {
-            padding: 8px;
-            cursor: pointer;
-        }
-
         .size-row {
             display: flex;
             gap: 10px;
@@ -241,14 +236,25 @@
             display: block;
         }
 
-        .input-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        .warning-message {
+            background: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            text-align: left;
+            display: none;
+            font-size: 13px;
+            border: 1px solid #ffc107;
         }
 
-        .input-grid input {
-            margin-bottom: 0;
+        .warning-message.show {
+            display: block;
+        }
+
+        .warning-message strong {
+            display: block;
+            margin-bottom: 5px;
         }
 
         .info-text {
@@ -271,8 +277,6 @@
                         <option value="url">URL/Link</option>
                         <option value="email">Email</option>
                         <option value="phone">Phone Number</option>
-                        <option value="mp3">MP3 URL</option>
-                        <option value="pdf">PDF URL</option>
                     </select>
                 </div>
 
@@ -313,30 +317,19 @@
                     </div>
                 </div>
 
-                <!-- MP3 -->
-                <div id="mp3Fields" class="hidden">
-                    <div class="form-group">
-                        <label for="mp3Url">MP3 URL:</label>
-                        <input type="url" id="mp3Url" placeholder="https://example.com/song.mp3">
-                    </div>
-                </div>
-
-                <!-- PDF -->
-                <div id="pdfFields" class="hidden">
-                    <div class="form-group">
-                        <label for="pdfUrl">PDF URL:</label>
-                        <input type="url" id="pdfUrl" placeholder="https://example.com/document.pdf">
-                    </div>
-                </div>
-
                 <div class="form-group">
                     <div class="size-row">
                         <div>
                             <label for="qrSize">QR Code Size:</label>
-                            <input type="number" id="qrSize" value="300" min="100" max="800">
+                            <input type="number" id="qrSize" value="300" min="100" max="800" onchange="checkSizeWarning()">
                         </div>
                         <span>px</span>
                     </div>
+                </div>
+
+                <div class="warning-message" id="sizeWarning">
+                    <strong>⚠️ Size Warning</strong>
+                    Larger QR codes may reduce scanning accuracy. The optimal size is 200-400px.
                 </div>
 
                 <button class="btn-generate" onclick="generateQR()">Generate QR Code</button>
@@ -359,6 +352,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let lastQRCanvas = null;
+        const ORIGINAL_QR_SIZE = 300; // Original/optimal size
 
         function updateFormFields() {
             const type = document.getElementById('inputType').value;
@@ -368,8 +362,6 @@
             document.getElementById('urlFields').classList.add('hidden');
             document.getElementById('emailFields').classList.add('hidden');
             document.getElementById('phoneFields').classList.add('hidden');
-            document.getElementById('mp3Fields').classList.add('hidden');
-            document.getElementById('pdfFields').classList.add('hidden');
 
             // Show relevant fields
             switch(type) {
@@ -385,12 +377,17 @@
                 case 'phone':
                     document.getElementById('phoneFields').classList.remove('hidden');
                     break;
-                case 'mp3':
-                    document.getElementById('mp3Fields').classList.remove('hidden');
-                    break;
-                case 'pdf':
-                    document.getElementById('pdfFields').classList.remove('hidden');
-                    break;
+            }
+        }
+
+        function checkSizeWarning() {
+            const size = parseInt(document.getElementById('qrSize').value) || 300;
+            const warning = document.getElementById('sizeWarning');
+            
+            if (size > ORIGINAL_QR_SIZE) {
+                warning.classList.add('show');
+            } else {
+                warning.classList.remove('show');
             }
         }
 
@@ -424,12 +421,6 @@
                     const phone = document.getElementById('phoneNumber').value.trim();
                     return phone ? `tel:${phone}` : '';
                 }
-                
-                case 'mp3':
-                    return document.getElementById('mp3Url').value.trim();
-                
-                case 'pdf':
-                    return document.getElementById('pdfUrl').value.trim();
                 
                 default:
                     return '';
