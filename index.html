@@ -26,8 +26,20 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 500px;
+            max-width: 800px;
             width: 100%;
+        }
+
+        .content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                grid-template-columns: 1fr;
+            }
         }
 
         h1 {
@@ -35,6 +47,19 @@
             color: #333;
             margin-bottom: 30px;
             font-size: 28px;
+            grid-column: 1 / -1;
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .form-group {
@@ -107,6 +132,7 @@
         .btn-download {
             background: #4CAF50;
             color: white;
+            flex: 1;
         }
 
         .btn-download:hover {
@@ -123,6 +149,7 @@
         .btn-copy {
             background: #2196F3;
             color: white;
+            flex: 1;
         }
 
         .btn-copy:hover {
@@ -136,38 +163,6 @@
             transform: none;
         }
 
-        .qr-output {
-            text-align: center;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 12px;
-            display: none;
-        }
-
-        .qr-output.active {
-            display: block;
-        }
-
-        .qr-output h3 {
-            margin-bottom: 15px;
-            color: #555;
-            font-size: 16px;
-        }
-
-        #qrCanvas {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            justify-content: center;
-        }
-
         .size-control {
             display: flex;
             gap: 10px;
@@ -177,6 +172,7 @@
 
         .size-control label {
             margin-bottom: 0;
+            white-space: nowrap;
         }
 
         .size-control input {
@@ -203,46 +199,102 @@
         .success-message.show {
             display: block;
         }
+
+        .qr-preview {
+            text-align: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 12px;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ddd;
+        }
+
+        .qr-preview.active {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .qr-preview h3 {
+            margin-bottom: 20px;
+            color: #555;
+            font-size: 16px;
+        }
+
+        #qrCanvas {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #qrCanvas.show {
+            display: block;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .placeholder-text {
+            color: #999;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎯 QR Code Maker</h1>
 
-        <div class="form-group">
-            <label for="inputType">What would you like to encode?</label>
-            <select id="inputType">
-                <option value="text">Text</option>
-                <option value="url">URL/Link</option>
-            </select>
-        </div>
+        <div class="content-wrapper">
+            <div class="form-section">
+                <div class="form-group">
+                    <label for="inputType">What would you like to encode?</label>
+                    <select id="inputType">
+                        <option value="text">Text</option>
+                        <option value="url">URL/Link</option>
+                    </select>
+                </div>
 
-        <div class="form-group">
-            <label for="inputData">Enter your content:</label>
-            <textarea id="inputData" placeholder="Enter text or paste a URL..."></textarea>
-            <div class="info-text" id="infoText">Maximum 2953 characters</div>
-        </div>
+                <div class="form-group">
+                    <label for="inputData">Enter your content:</label>
+                    <textarea id="inputData" placeholder="Enter text or paste a URL..."></textarea>
+                    <div class="info-text" id="infoText">Maximum 2953 characters</div>
+                </div>
 
-        <div class="form-group">
-            <div class="size-control">
-                <label for="qrSize">QR Code Size:</label>
-                <input type="text" id="qrSize" value="300" min="100" max="800">
-                <span style="color: #999;">px</span>
+                <div class="form-group">
+                    <div class="size-control">
+                        <label for="qrSize">QR Code Size:</label>
+                        <input type="text" id="qrSize" value="300" min="100" max="800">
+                        <span style="color: #999;">px</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-generate" onclick="generateQR()">Generate QR Code</button>
+                </div>
             </div>
-        </div>
 
-        <div class="button-group">
-            <button class="btn-generate" onclick="generateQR()">Generate QR Code</button>
-        </div>
-
-        <div class="qr-output" id="qrOutput">
-            <h3>Your QR Code</h3>
-            <canvas id="qrCanvas"></canvas>
-            <div class="controls">
-                <button class="btn-download" id="downloadBtn" onclick="downloadQR()">⬇️ Download</button>
-                <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy</button>
+            <div class="preview-section">
+                <div class="qr-preview" id="qrPreview">
+                    <h3>QR Code Preview</h3>
+                    <div id="qrContainer"></div>
+                    <p class="placeholder-text">Your QR code will appear here</p>
+                </div>
+                <div class="controls" id="controls" style="margin-top: 20px; display: none;">
+                    <button class="btn-download" id="downloadBtn" onclick="downloadQR()">⬇️ Download</button>
+                    <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy</button>
+                </div>
+                <div class="success-message" id="successMessage">Copied to clipboard!</div>
             </div>
-            <div class="success-message" id="successMessage">Copied to clipboard!</div>
         </div>
     </div>
 
@@ -250,9 +302,11 @@
     <script>
         const inputData = document.getElementById('inputData');
         const inputType = document.getElementById('inputType');
-        const qrOutput = document.getElementById('qrOutput');
-        const qrCanvas = document.getElementById('qrCanvas');
+        const qrPreview = document.getElementById('qrPreview');
+        const qrContainer = document.getElementById('qrContainer');
         const successMessage = document.getElementById('successMessage');
+        const controls = document.getElementById('controls');
+        let qrCode = null;
 
         // Update placeholder based on input type
         inputType.addEventListener('change', function() {
@@ -273,12 +327,16 @@
             }
 
             // Clear previous QR code
-            qrCanvas.innerHTML = '';
+            qrContainer.innerHTML = '';
 
             const size = parseInt(document.getElementById('qrSize').value) || 300;
 
+            // Create canvas element
+            const canvas = document.createElement('canvas');
+            qrContainer.appendChild(canvas);
+
             // Generate QR code
-            const qr = new QRCode(qrCanvas, {
+            qrCode = new QRCode(canvas, {
                 text: data,
                 width: size,
                 height: size,
@@ -287,31 +345,39 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Show output
-            qrOutput.classList.add('active');
+            // Show preview and controls
+            qrPreview.classList.add('active');
+            controls.style.display = 'flex';
             successMessage.classList.remove('show');
 
-            // Focus to the generated QR code
+            // Scroll to preview
             setTimeout(() => {
-                qrOutput.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                qrPreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
 
         function downloadQR() {
-            const canvas = qrCanvas.querySelector('canvas');
+            const canvas = qrContainer.querySelector('canvas');
             if (!canvas) {
                 alert('Please generate a QR code first!');
                 return;
             }
 
+            // Get current date
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const filename = `${day}/${month}/${year}`;
+
             const link = document.createElement('a');
             link.href = canvas.toDataURL('image/png');
-            link.download = 'qr-code.png';
+            link.download = filename + '.png';
             link.click();
         }
 
         function copyToClipboard() {
-            const canvas = qrCanvas.querySelector('canvas');
+            const canvas = qrContainer.querySelector('canvas');
             if (!canvas) {
                 alert('Please generate a QR code first!');
                 return;
