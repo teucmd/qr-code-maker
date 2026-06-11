@@ -513,10 +513,13 @@
             });
         }
 
-        // Generate QR on page load
+        // Generate QR on page load (only for default text type)
         window.addEventListener('load', () => {
             setTimeout(() => {
-                generateQR();
+                const data = document.getElementById('inputData').value.trim();
+                if (data) {
+                    generateQR();
+                }
             }, 200);
         });
 
