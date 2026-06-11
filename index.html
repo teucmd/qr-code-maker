@@ -68,7 +68,7 @@
             font-size: 14px;
         }
 
-        select, textarea, input[type="number"] {
+        select, textarea, input {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -78,7 +78,7 @@
             transition: border-color 0.3s ease;
         }
 
-        select:focus, textarea:focus, input[type="number"]:focus {
+        select:focus, textarea:focus, input:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -86,6 +86,11 @@
         textarea {
             resize: vertical;
             min-height: 100px;
+        }
+
+        input[type="file"] {
+            padding: 8px;
+            cursor: pointer;
         }
 
         .size-row {
@@ -110,6 +115,10 @@
             color: #999;
             margin-bottom: 12px;
             padding-left: 5px;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         .btn-generate {
@@ -231,6 +240,22 @@
         .success-message.show {
             display: block;
         }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .input-grid input {
+            margin-bottom: 0;
+        }
+
+        .info-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -241,15 +266,67 @@
             <div class="form-section">
                 <div class="form-group">
                     <label for="inputType">What would you like to encode?</label>
-                    <select id="inputType">
+                    <select id="inputType" onchange="updateFormFields()">
                         <option value="text">Text</option>
                         <option value="url">URL/Link</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone Number</option>
+                        <option value="mp3">MP3 URL</option>
+                        <option value="pdf">PDF URL</option>
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="inputData">Enter your content:</label>
-                    <textarea id="inputData" placeholder="Enter text or paste a URL...">Hello</textarea>
+                <!-- Text -->
+                <div id="textFields" class="form-group">
+                    <label for="inputData">Enter your text:</label>
+                    <textarea id="inputData" placeholder="Enter text...">Hello</textarea>
+                </div>
+
+                <!-- URL -->
+                <div id="urlFields" class="form-group hidden">
+                    <label for="urlInput">Enter URL:</label>
+                    <input type="url" id="urlInput" placeholder="https://example.com">
+                </div>
+
+                <!-- Email -->
+                <div id="emailFields" class="hidden">
+                    <div class="form-group">
+                        <label for="emailAddress">Email Address:</label>
+                        <input type="email" id="emailAddress" placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="emailSubject">Subject (optional):</label>
+                        <input type="text" id="emailSubject" placeholder="Email subject">
+                    </div>
+                    <div class="form-group">
+                        <label for="emailBody">Message (optional):</label>
+                        <textarea id="emailBody" placeholder="Email body..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div id="phoneFields" class="hidden">
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number:</label>
+                        <input type="tel" id="phoneNumber" placeholder="+1234567890">
+                        <div class="info-text">Include country code (e.g., +1 for USA)</div>
+                    </div>
+                </div>
+
+                <!-- MP3 -->
+                <div id="mp3Fields" class="hidden">
+                    <div class="form-group">
+                        <label for="mp3Url">MP3 URL:</label>
+                        <input type="url" id="mp3Url" placeholder="https://example.com/song.mp3">
+                    </div>
+                </div>
+
+                <!-- PDF -->
+                <div id="pdfFields" class="hidden">
+                    <div class="form-group">
+                        <label for="pdfUrl">PDF URL:</label>
+                        <input type="url" id="pdfUrl" placeholder="https://example.com/document.pdf">
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -283,11 +360,87 @@
     <script>
         let lastQRCanvas = null;
 
+        function updateFormFields() {
+            const type = document.getElementById('inputType').value;
+            
+            // Hide all fields
+            document.getElementById('textFields').classList.add('hidden');
+            document.getElementById('urlFields').classList.add('hidden');
+            document.getElementById('emailFields').classList.add('hidden');
+            document.getElementById('phoneFields').classList.add('hidden');
+            document.getElementById('mp3Fields').classList.add('hidden');
+            document.getElementById('pdfFields').classList.add('hidden');
+
+            // Show relevant fields
+            switch(type) {
+                case 'text':
+                    document.getElementById('textFields').classList.remove('hidden');
+                    break;
+                case 'url':
+                    document.getElementById('urlFields').classList.remove('hidden');
+                    break;
+                case 'email':
+                    document.getElementById('emailFields').classList.remove('hidden');
+                    break;
+                case 'phone':
+                    document.getElementById('phoneFields').classList.remove('hidden');
+                    break;
+                case 'mp3':
+                    document.getElementById('mp3Fields').classList.remove('hidden');
+                    break;
+                case 'pdf':
+                    document.getElementById('pdfFields').classList.remove('hidden');
+                    break;
+            }
+        }
+
+        function getQRData() {
+            const type = document.getElementById('inputType').value;
+
+            switch(type) {
+                case 'text':
+                    return document.getElementById('inputData').value.trim();
+                
+                case 'url':
+                    return document.getElementById('urlInput').value.trim();
+                
+                case 'email': {
+                    const email = document.getElementById('emailAddress').value.trim();
+                    const subject = document.getElementById('emailSubject').value.trim();
+                    const body = document.getElementById('emailBody').value.trim();
+                    
+                    if (!email) return '';
+                    let mailto = `mailto:${email}`;
+                    if (subject || body) {
+                        const params = [];
+                        if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+                        if (body) params.push(`body=${encodeURIComponent(body)}`);
+                        mailto += '?' + params.join('&');
+                    }
+                    return mailto;
+                }
+                
+                case 'phone': {
+                    const phone = document.getElementById('phoneNumber').value.trim();
+                    return phone ? `tel:${phone}` : '';
+                }
+                
+                case 'mp3':
+                    return document.getElementById('mp3Url').value.trim();
+                
+                case 'pdf':
+                    return document.getElementById('pdfUrl').value.trim();
+                
+                default:
+                    return '';
+            }
+        }
+
         function generateQR() {
-            const data = document.getElementById('inputData').value.trim();
+            const data = getQRData();
             
             if (!data) {
-                alert('Please enter some content!');
+                alert('Please enter valid content!');
                 return;
             }
 
@@ -360,18 +513,6 @@
             });
         }
 
-        // Type selector
-        document.getElementById('inputType').addEventListener('change', function() {
-            const input = document.getElementById('inputData');
-            if (this.value === 'url') {
-                input.placeholder = 'https://example.com';
-                input.value = '';
-            } else {
-                input.placeholder = 'Enter text...';
-                input.value = '';
-            }
-        });
-
         // Generate QR on page load
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -380,7 +521,7 @@
         });
 
         // Allow Ctrl+Enter to generate
-        document.getElementById('inputData').addEventListener('keypress', function(e) {
+        document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && e.ctrlKey) {
                 generateQR();
             }
