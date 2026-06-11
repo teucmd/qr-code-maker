@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QR Code Maker</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -27,8 +26,15 @@
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 900px;
+            max-width: 1000px;
             width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 32px;
         }
 
         .wrapper {
@@ -45,24 +51,9 @@
             }
         }
 
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-size: 28px;
-            grid-column: 1 / -1;
-        }
-
-        .form-section h2 {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 20px;
-        }
-
-        .preview-section h2 {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 20px;
+        .form-section {
+            display: flex;
+            flex-direction: column;
         }
 
         .form-group {
@@ -77,9 +68,7 @@
             font-size: 14px;
         }
 
-        input[type="text"],
-        textarea,
-        select {
+        select, textarea, input[type="number"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #e0e0e0;
@@ -89,54 +78,52 @@
             transition: border-color 0.3s ease;
         }
 
-        input[type="text"]:focus,
-        textarea:focus,
-        select:focus {
+        select:focus, textarea:focus, input[type="number"]:focus {
             outline: none;
             border-color: #667eea;
         }
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 100px;
         }
 
         .size-row {
             display: flex;
             gap: 10px;
-            align-items: center;
+            align-items: flex-end;
+        }
+
+        .size-row > div {
+            flex: 1;
         }
 
         .size-row label {
-            margin-bottom: 0;
-            flex-shrink: 0;
+            margin-bottom: 8px;
         }
 
         .size-row input {
-            width: 100px;
-            margin-bottom: 0;
+            width: 100%;
         }
 
         .size-row span {
             color: #999;
-            flex-shrink: 0;
+            margin-bottom: 12px;
+            padding-left: 5px;
         }
 
-        button {
+        .btn-generate {
             width: 100%;
-            padding: 12px;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .btn-generate {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            margin-top: 20px;
+            margin-top: 10px;
         }
 
         .btn-generate:hover {
@@ -148,14 +135,53 @@
             transform: translateY(0);
         }
 
+        .preview-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #qrPreview {
+            background: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        #qrPreview.active {
+            border-color: #667eea;
+            background: #f0f0ff;
+        }
+
+        .placeholder {
+            color: #999;
+            font-size: 14px;
+        }
+
+        #qrcode {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #qrcode img {
+            max-width: 100%;
+            height: auto;
+        }
+
         .button-row {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
-        .btn-download,
-        .btn-copy {
+        .btn-download, .btn-copy {
             flex: 1;
             padding: 12px;
             border: none;
@@ -164,6 +190,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: none;
+        }
+
+        .btn-download.show, .btn-copy.show {
+            display: block;
         }
 
         .btn-download {
@@ -176,11 +207,6 @@
             transform: translateY(-2px);
         }
 
-        .btn-download:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-
         .btn-copy {
             background: #2196F3;
             color: white;
@@ -189,33 +215,6 @@
         .btn-copy:hover {
             background: #0b7dda;
             transform: translateY(-2px);
-        }
-
-        .btn-copy:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-
-        #qrcode {
-            text-align: center;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 12px;
-            min-height: 340px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px dashed #ddd;
-        }
-
-        #qrcode img {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .placeholder {
-            color: #999;
-            text-align: center;
         }
 
         .success-message {
@@ -232,14 +231,6 @@
         .success-message.show {
             display: block;
         }
-
-        .controls {
-            display: none;
-        }
-
-        .controls.show {
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -248,10 +239,8 @@
 
         <div class="wrapper">
             <div class="form-section">
-                <h2>Create QR Code</h2>
-
                 <div class="form-group">
-                    <label for="inputType">Type:</label>
+                    <label for="inputType">What would you like to encode?</label>
                     <select id="inputType">
                         <option value="text">Text</option>
                         <option value="url">URL/Link</option>
@@ -259,14 +248,16 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="inputData">Content:</label>
-                    <textarea id="inputData" placeholder="Enter text or paste a URL..."></textarea>
+                    <label for="inputData">Enter your content:</label>
+                    <textarea id="inputData" placeholder="Enter text or paste a URL...">Hello</textarea>
                 </div>
 
                 <div class="form-group">
                     <div class="size-row">
-                        <label for="qrSize">Size:</label>
-                        <input type="number" id="qrSize" value="300" min="100" max="800">
+                        <div>
+                            <label for="qrSize">QR Code Size:</label>
+                            <input type="number" id="qrSize" value="300" min="100" max="800">
+                        </div>
                         <span>px</span>
                     </div>
                 </div>
@@ -275,33 +266,22 @@
             </div>
 
             <div class="preview-section">
-                <h2>Preview</h2>
-                <div id="qrcode">
-                    <p class="placeholder">Your QR code will appear here</p>
+                <div id="qrPreview">
+                    <div id="qrcode"></div>
+                    <p class="placeholder" id="placeholder">Your QR code will appear here</p>
                 </div>
-                <div class="controls" id="controls">
-                    <div class="button-row">
-                        <button class="btn-download" onclick="downloadQR()">⬇️ Download</button>
-                        <button class="btn-copy" onclick="copyToClipboard()">📋 Copy</button>
-                    </div>
-                    <div class="success-message" id="successMessage">Copied to clipboard!</div>
+                <div class="button-row">
+                    <button class="btn-download" id="downloadBtn" onclick="downloadQR()">⬇️ Download</button>
+                    <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy</button>
                 </div>
+                <div class="success-message" id="successMessage">✓ Copied to clipboard!</div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         let lastQRCanvas = null;
-
-        document.getElementById('inputType').addEventListener('change', function() {
-            const input = document.getElementById('inputData');
-            if (this.value === 'url') {
-                input.placeholder = 'https://example.com';
-            } else {
-                input.placeholder = 'Enter text...';
-            }
-            input.value = '';
-        });
 
         function generateQR() {
             const data = document.getElementById('inputData').value.trim();
@@ -313,11 +293,14 @@
 
             const size = parseInt(document.getElementById('qrSize').value) || 300;
             const qrcodeDiv = document.getElementById('qrcode');
+            const previewDiv = document.getElementById('qrPreview');
+            const placeholder = document.getElementById('placeholder');
             
-            // Clear previous QR code
+            // Clear previous content
             qrcodeDiv.innerHTML = '';
+            placeholder.style.display = 'block';
 
-            // Generate new QR code
+            // Generate QR code
             new QRCode(qrcodeDiv, {
                 text: data,
                 width: size,
@@ -327,12 +310,15 @@
                 correctLevel: QRCode.CorrectLevel.H
             });
 
-            // Store the canvas for download/copy
+            // After generation, get the canvas
             setTimeout(() => {
-                lastQRCanvas = qrcodeDiv.querySelector('canvas');
-                if (lastQRCanvas) {
-                    // Show controls
-                    document.getElementById('controls').classList.add('show');
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    lastQRCanvas = canvas;
+                    placeholder.style.display = 'none';
+                    previewDiv.classList.add('active');
+                    document.getElementById('downloadBtn').classList.add('show');
+                    document.getElementById('copyBtn').classList.add('show');
                 }
             }, 100);
         }
@@ -347,7 +333,7 @@
             const day = String(now.getDate()).padStart(2, '0');
             const month = String(now.getMonth() + 1).padStart(2, '0');
             const year = now.getFullYear();
-            const filename = `${day}/${month}/${year}.png`;
+            const filename = `${day}-${month}-${year}.png`;
 
             const link = document.createElement('a');
             link.href = lastQRCanvas.toDataURL('image/png');
@@ -362,18 +348,36 @@
             }
 
             lastQRCanvas.toBlob(function(blob) {
-                const item = new ClipboardItem({ 'image/png': blob });
-                navigator.clipboard.write([item]).then(() => {
-                    const message = document.getElementById('successMessage');
-                    message.classList.add('show');
-                    setTimeout(() => {
-                        message.classList.remove('show');
-                    }, 2000);
+                navigator.clipboard.write([
+                    new ClipboardItem({ 'image/png': blob })
+                ]).then(() => {
+                    const msg = document.getElementById('successMessage');
+                    msg.classList.add('show');
+                    setTimeout(() => msg.classList.remove('show'), 2000);
                 }).catch(() => {
-                    alert('Failed to copy. Please try downloading instead.');
+                    alert('Failed to copy');
                 });
             });
         }
+
+        // Type selector
+        document.getElementById('inputType').addEventListener('change', function() {
+            const input = document.getElementById('inputData');
+            if (this.value === 'url') {
+                input.placeholder = 'https://example.com';
+                input.value = '';
+            } else {
+                input.placeholder = 'Enter text...';
+                input.value = '';
+            }
+        });
+
+        // Generate QR on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                generateQR();
+            }, 200);
+        });
 
         // Allow Ctrl+Enter to generate
         document.getElementById('inputData').addEventListener('keypress', function(e) {
