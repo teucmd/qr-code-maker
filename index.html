@@ -279,7 +279,7 @@
                 <!-- Text -->
                 <div id="textFields" class="form-group">
                     <label for="inputData">Enter your text:</label>
-                    <textarea id="inputData" placeholder="Enter text...">Hello</textarea>
+                    <textarea id="inputData" placeholder="Enter text..."></textarea>
                 </div>
 
                 <!-- URL -->
@@ -512,16 +512,6 @@
                 });
             });
         }
-
-        // Generate QR on page load (only for default text type)
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                const data = document.getElementById('inputData').value.trim();
-                if (data) {
-                    generateQR();
-                }
-            }, 200);
-        });
 
         // Allow Ctrl+Enter to generate
         document.addEventListener('keypress', function(e) {
